@@ -1,0 +1,108 @@
+<nav class="navbar navbar-inverse navbar-fixed-bottom" role="navigation">
+<a class="navbar-brand" href="/">Literacy Reports -- SADA </a>
+</nav>
+
+<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css" media="screen,projection" />
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+
+```{r cache=TRUE, echo=FALSE}
+# re-run Download.R to re-create these
+learningdata <- readRDS("learningdata.RDS")
+teachers <- readRDS("teachers.RDS")
+```
+
+```{r cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+setwd("~/Code/LitReportCards/")
+require(formhub); require(stringr); require(plyr); require(reshape2); require(xtable); require(R.utils); require(ggplot2)
+# the following is derived from the pictures taken when barcode-ID failed
+sada_shortID_to_barcode <- c("10F7C" = "f4d8143fe5194c0da6165476ab169ffc",
+                           "8385c7" = "f6b9afeb94b648b193c9e3a082e5afc7",
+                           "6d78c8" = "68f876416c614681ab96ed06d11df148",
+                           "5d6446" = "52e1f82ef46649d6a2354753c61a08c6",
+                           "8afd39" = "8a91815581364d9aa3dbdf90dbe95bb9",
+                           "74c0bd" = "497219c6c3444e5f9ceba7519bbb403d",
+                           "6cf9c6" = "c14c642bcf144a7aa58c0a251a2886c6",
+                           "609d4f" = "ae0dde8c5f0542508ed72cdc21ea964f",
+                           "622233" = "bf0943d8ee5f43f5bc28ba5e093ffe33")
+# small clean-up for spurious space characters
+learningdata$teacher_fallback_ID <- 
+           str_replace_all(learningdata$teacher_fallback_ID, '\n', '')           
+# replace barcode if it is NA
+learningdata$teacher_barcode <-
+    ifelse(is.na(learningdata$teacher_barcode),
+           revalue(learningdata$teacher_fallback_ID, sada_shortID_to_barcode),
+           learningdata$teacher_barcode)
+
+# DATA CLEANING / TRANSFORMATION
+learningdata <- rename(learningdata,
+                       c("learning_levels_reading_nothing" = "literacy_level",
+                         "learning_levels_numeracy_nothing" = "numeracy_level",
+                         "general_information_age" = "Age",
+                         "general_information_sex" = "Sex"))
+learningdata$literacy_level <- capitalize(str_extract(learningdata$literacy_level, "[^_]*$"))
+learningdata$Sex <- capitalize(learningdata$Sex)
+
+stopifnot(all(learningdata$teacher_barcode %in% teachers$barcode))
+
+merged <- merge(as.data.frame(learningdata), 
+                as.data.frame(teachers), 
+                by.x="teacher_barcode", by.y="barcode")
+merged$`Age Group` <- cut(merged$Age, 
+                              breaks=c(5, 9, 11, 14, 18), 
+                              labels=c("6-9", "10-11", "12-14", "15-17"))
+
+#### FINAL STEP: Because we cannot publish the names of the schools publicly
+levels(merged$school) <- str_c("School:", c(10:1))
+```
+
+<div id="content-wrapper" class="container container-fluid">
+<div id="tabs">
+```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+# This section outputs the tab headers
+cat('<ul>')
+l_ply(unique(merged$school), function(school) {
+    cat(sprintf('<li><a href="#%s">%s</a></li>\n', 
+                school, toupper(str_replace_all(school, '_', ' '))))
+})
+cat('</ul>\n')
+```
+
+```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, out.extra="", fig.height=3, fig.width=15}
+# This section will output the school table, inside a div linked to the tab-header
+d_ply(merged, c("school"), function(schooldata) {
+    school = schooldata[1,'school']
+    reading_levels <- c("Nothing", "Letters", "Words", "Paragraphs", "Story")
+    # put things in the right order
+    schooldata$literacy_level <- factor(schooldata$literacy_level, reading_levels)
+    age_sex_literacy <- dcast(schooldata, `Age Group` + Sex ~ literacy_level, length,
+                              margins=c("Age Group", "Sex", "literacy_level"), drop=F)
+    # we use dcast(..., drop=F) and then drop 0-totaling rows, because we want all columns
+    age_sex_literacy <- subset(age_sex_literacy, `(all)` != 0)
+    percentify <- function(vec) { 
+        str_c(vec, ' (', round(100 * vec / age_sex_literacy[["(all)"]]), '%)')
+    }
+    age_sex_literacy[reading_levels] <- numcolwise(percentify)(age_sex_literacy[reading_levels])
+    
+    # Now we produce some html output per school that will print out an html table
+    # that is inside a school-wise accordion
+    cat(sprintf('<div id="%s">', school))
+    print(xtable(age_sex_literacy), type='html', 
+          html.table.attributes=
+              sprintf('class="table table-bordered table-hover table-responsive 
+                      table-condensed school-table" school="%s"', school),
+              include.rownames=FALSE)
+    schooldata$AgeGroup <- schooldata$`Age Group`
+    print(ggplot(schooldata, aes(x=Sex, fill=literacy_level)) + 
+        geom_bar() + facet_grid(~AgeGroup) + 
+        scale_fill_brewer(type="seq", palette="YlGnBu", drop=FALSE) + 
+        labs(y="Number of Students", 
+             title=toupper(str_replace_all(unique(school), "_", " ")), 
+             fill="Reading Level", x=""))
+    cat('</div>\n')
+})
+```
+
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+<script type="text/javascript"> (function($) { $( "#tabs" ).tabs(); })(jQuery); </script>
