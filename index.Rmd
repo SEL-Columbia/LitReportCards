@@ -1,3 +1,11 @@
+<nav class="navbar navbar-inverse navbar-fixed-bottom" role="navigation">
+  <div class="container-fluid">
+<a class="navbar-brand active" href="index.html">Literacy Report Cards</a>
+ <ul class="nav navbar-nav">
+<li><a href="about.html">About</a></li>
+</ul>
+</nav></div>
+
 
 <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css" media="screen,projection" />
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">

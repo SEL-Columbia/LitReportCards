@@ -1,6 +1,10 @@
-<p><nav class="navbar navbar-inverse navbar-fixed-bottom" role="navigation">
-<a class="navbar-brand" href="about.html">About</a>
-</nav></p>
+<nav class="navbar navbar-inverse navbar-fixed-bottom" role="navigation">
+  <div class="container-fluid">
+<a class="navbar-brand active" href="index.html">Literacy Report Cards</a>
+ <ul class="nav navbar-nav">
+<li><a class="active" href="about.html">About</a></li>
+</ul></nav></div>
+
 
 <h3>Introduction:</h3>
 
