@@ -2,7 +2,7 @@
   <div class="container-fluid">
 <a class="navbar-brand active" href="index.html">Literacy Report Cards</a>
  <ul class="nav navbar-nav">
-<li><a class="active" href="about.html">About</a></li>
+<li class="active"><a href="about.html">About</a></li>
 </ul></nav></div>
 <div class="container">
 <div class="row">
@@ -42,5 +42,16 @@
 <p>For a more detailed description of how the Literacy Report Cards project works, you can watch <a href="http://www.youtube.com/watch?v=8XmQXVEy97c">this clip</a>.
 For more context about Port-à-Piment pilot and its policy implications for Haiti, you can read <a href="http://cgsd.columbia.edu/files/2013/05/Haiti_literacy_assessment_policy_brief.pdf">this piece</a>.</p>
 
+
+<br/><br/><br/>
+
+
+
+
 </div></div></div>
 <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css" media="screen,projection" />
+
+
+
+
+
