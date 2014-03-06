@@ -1,0 +1,91 @@
+
+<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css" media="screen,projection" />
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+
+```{r cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+# re-run Download.R to re-create these
+learningdata <- readRDS("data/LRC_Bonsaaso.rds")
+teachers <- readRDS("data/Teachers_Bonsaaso.rds")
+t <- read.csv("data//TeachersControl.csv", stringsAsFactors=FALSE)
+row.names(t) <- t$teacher_fallback_ID
+slugify <- function(s) { paste(unlist(str_extract_all(s, '[a-z0-9A-Z]+')), collapse="") }
+```
+
+```{r cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+stopifnot(nrow(subset(learningdata, !teacher_fallback_ID %in% t$teacher_fallback_ID &
+                          teacher_fallback_ID != "")) == 0)
+
+#### DROP Unofficial Assessments and BAD SCANs
+learningdata <- subset(learningdata, official_assessment == 'yes')
+num_all_observations <- nrow(learningdata)
+learningdata <- subset(learningdata, teacher_barcode %in% t$teacher_barcode |
+                          teacher_barcode == "")
+# cat("DROPPING", num_all_observations - nrow(learningdata), " OBS with BAD SCANS.")
+
+## Standardize barcode
+learningdata$teacher_barcode <- ifelse(
+    learningdata$teacher_barcode != "", as.character(learningdata$teacher_barcode), 
+    t[learningdata$teacher_fallback_ID, 'teacher_barcode'])
+learningdata <- merge(t, learningdata, by='teacher_barcode')
+learningdata$school_primary <- revalue(learningdata$school_primary,
+                                       c("primary_three" = "Grade 3",
+                                         "primary_four" = "Grade 4"))
+learningdata$AgeGroup <- cut(learningdata$age, 
+                             breaks=c(5, 9, 11, 14, 18), 
+                             labels=c("6-9", "10-11", "12-14", "15-17"))
+
+```
+
+<div id="content-wrapper" class="container container-fluid"><div id="tabs">
+  <ul>
+```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+learningdata$groupname <- sprintf("%s, %s group", learningdata$school_primary, learningdata$treat)
+# This section outputs the tab headers
+l_ply(sort(unique(learningdata$groupname)), function(groupname) {
+    cat(sprintf('<li><a href="#%s">%s</a></li>\n', 
+                slugify(groupname), groupname))
+})
+```
+  </ul>
+
+
+```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, out.extra="", fig.height=3, fig.width=15}
+require(plyr); require(reshape2); require(ggplot2); require(xtable);
+d_ply(learningdata, c("school_primary", "treat"), function(groupdata) {
+    groupname <- groupdata[1,'groupname']
+    grpnm <- slugify(groupname)
+    
+    reading_levels <- c("Nothing", "Letters", "Words", "Paragraphs", "Story")
+    # put things in the right order
+    groupdata$literacy_level <- factor(groupdata$literacy_level, reading_levels)
+    age_sex_literacy <- dcast(groupdata, age + AgeGroup ~ literacy_level, length,
+                              margins=c("age", "AgeGroup", "literacy_level"), drop=F)
+    # we use dcast(..., drop=F) and then drop 0-totaling rows, because we want all columns
+    age_sex_literacy <- subset(age_sex_literacy, `(all)` != 0)
+    percentify <- function(vec) { 
+        str_c(vec, ' (', round(100 * vec / age_sex_literacy[["(all)"]]), '%)')
+    }
+    age_sex_literacy[reading_levels] <- numcolwise(percentify)(age_sex_literacy[reading_levels])
+    
+    # Now we produce some html output per group that will print out an html table
+    # that is inside a group-wise accordion
+    cat(sprintf('<div id="%s">', grpnm))
+    print(xtable(age_sex_literacy), type='html', 
+          html.table.attributes=
+              sprintf('class="table table-bordered table-hover table-responsive 
+                      table-condensed group-table" group="%s"', grpnm),
+              include.rownames=FALSE)
+    print(ggplot(groupdata, aes(x=sex, fill=literacy_level)) + 
+        geom_bar() + facet_grid(~AgeGroup) + 
+        scale_fill_brewer(type="seq", palette="YlGnBu", drop=FALSE) + 
+        labs(y="Number of Students", 
+             title=groupname, 
+             fill="Reading Level", x=""))
+    cat('\n</div>\n')
+})
+```
+
+</div></div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+<script type="text/javascript"> (function($) { $( "#tabs" ).tabs(); })(jQuery); </script>

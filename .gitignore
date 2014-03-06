@@ -3,3 +3,6 @@
 .RData
 *.md
 *.Rproj
+data/
+cache/
+.DS_Store
