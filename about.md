@@ -4,8 +4,9 @@
  <ul class="nav navbar-nav">
 <li><a class="active" href="about.html">About</a></li>
 </ul></nav></div>
-
-
+<div class="container">
+<div class="row">
+<div class="col-md-9" role="main">
 <h3>Introduction:</h3>
 
 <p>At the Earth Institute at Columbia University, the <a href="http://cgsd.columbia.edu/what-we-do/education/">Education Sector</a> at the Center on Globalization and Sustainable Development and the <a href="http://sel.columbia.edu">Sustainable Engineering Lab</a> at the School of Engineering work together to support the Literacy Report Cards project.</p>
@@ -41,4 +42,5 @@
 <p>For a more detailed description of how the Literacy Report Cards project works, you can watch <a href="http://www.youtube.com/watch?v=8XmQXVEy97c">this clip</a>.
 For more context about Port-à-Piment pilot and its policy implications for Haiti, you can read <a href="http://cgsd.columbia.edu/files/2013/05/Haiti_literacy_assessment_policy_brief.pdf">this piece</a>.</p>
 
-<p><link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css" media="screen,projection" /></p>
+</div></div></div>
+<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css" media="screen,projection" />

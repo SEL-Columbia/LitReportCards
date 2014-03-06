@@ -1,7 +1,7 @@
 .Rproj.user
 .Rhistory
 .RData
-*.md
+index.md
 *.Rproj
 data/
 cache/
