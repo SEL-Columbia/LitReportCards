@@ -12,8 +12,8 @@
 
 ```{r cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
 # re-run Download.R to re-create these
-learningdata <- readRDS("data/LRC_Bonsaaso.rds")
-teachers <- readRDS("data/Teachers_Bonsaaso.rds")
+learningdata <- as.data.frame(readRDS("data/Learning.rds"))
+teachers <- as.data.frame(readRDS("data/Teachers.rds"))
 t <- read.csv("data//TeachersControl.csv", stringsAsFactors=FALSE)
 row.names(t) <- t$teacher_fallback_ID
 slugify <- function(s) { paste(unlist(str_extract_all(s, '[a-z0-9A-Z]+')), collapse="") }
@@ -24,20 +24,19 @@ stopifnot(nrow(subset(learningdata, !teacher_fallback_ID %in% t$teacher_fallback
                           teacher_fallback_ID != "")) == 0)
 
 #### DROP Unofficial Assessments and BAD SCANs
-learningdata <- subset(learningdata, official_assessment == 'yes')
+learningdata$teacher_barcode <- ifelse(
+    learningdata$teacher_barcode != "", as.character(learningdata$teacher_barcode), 
+    t[learningdata$teacher_fallback_ID, 'teacher_barcode'])
+learningdata <- subset(learningdata, official_assessment == 'Yes',
+                       select=c("teacher_barcode", "age", "sex",
+                                "literacy_level", "official_assessment"))
 num_all_observations <- nrow(learningdata)
 learningdata <- subset(learningdata, teacher_barcode %in% t$teacher_barcode |
                           teacher_barcode == "")
 # cat("DROPPING", num_all_observations - nrow(learningdata), " OBS with BAD SCANS.")
 
 ## Standardize barcode
-learningdata$teacher_barcode <- ifelse(
-    learningdata$teacher_barcode != "", as.character(learningdata$teacher_barcode), 
-    t[learningdata$teacher_fallback_ID, 'teacher_barcode'])
 learningdata <- merge(t, learningdata, by='teacher_barcode')
-learningdata$school_primary <- revalue(learningdata$school_primary,
-                                       c("primary_three" = "Grade 3",
-                                         "primary_four" = "Grade 4"))
 learningdata$AgeGroup <- cut(learningdata$age, 
                              breaks=c(5, 9, 11, 14, 18), 
                              labels=c("6-9", "10-11", "12-14", "15-17"))
@@ -47,7 +46,7 @@ learningdata$AgeGroup <- cut(learningdata$age,
 <div id="content-wrapper" class="container container-fluid"><div id="tabs">
   <ul>
 ```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
-learningdata$groupname <- sprintf("%s, %s group", learningdata$school_primary, learningdata$treat)
+learningdata$groupname <- sprintf("%s, %s group", learningdata$grade, learningdata$treat)
 # This section outputs the tab headers
 l_ply(sort(unique(learningdata$groupname)), function(groupname) {
     cat(sprintf('<li><a href="#%s">%s</a></li>\n', 
@@ -59,7 +58,7 @@ l_ply(sort(unique(learningdata$groupname)), function(groupname) {
 
 ```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, out.extra="", fig.height=3, fig.width=15}
 require(plyr); require(reshape2); require(ggplot2); require(xtable);
-d_ply(learningdata, c("school_primary", "treat"), function(groupdata) {
+d_ply(learningdata, c("grade", "treat"), function(groupdata) {
     groupname <- groupdata[1,'groupname']
     grpnm <- slugify(groupname)
     

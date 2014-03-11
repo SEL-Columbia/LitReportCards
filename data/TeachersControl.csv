@@ -1,11 +1,11 @@
-"","teacher_fallback_ID","treat","teacher_barcode"
-"1","213D98","Treatment","a32bb711d6eb4ba7ac33a6ea602a8b18"
-"2","3830B7","Control","242dc9d00c7c41bab741712b080fb737"
-"3","352966","Treatment","bfae5ae7e8bb4a67a436ca4f3a8eb266"
-"4","5BF407","Control","0429d69e67ae4e83909a0741a8019b87"
-"5","49AC21","Treatment","4af59b5234ea425183faf2a86a62a621"
-"6","29ABED","Control","4e4d53f8732c42a38fe836ef34ce1bed"
-"7","8C13A","Control","741245adb5a64c6b96aeab6bf0dbe53a"
-"8","8438D8","Treatment","cafe6b7bd3e84dff81f32fe2ff4f85d8"
-"9","65ED4A","Treatment","bb3bcf3f13a643889126e902ce2c6a4a"
-"10","6415D","Control","75f51d7c35db460cb8f5d83deb04aedd"
+,teacher_fallback_ID,treat,teacher_barcode,grade
+1,213D98,Treatment,a32bb711d6eb4ba7ac33a6ea602a8b18,Primary 4
+2,3830B7,Control,242dc9d00c7c41bab741712b080fb737,Primary 3
+3,352966,Treatment,bfae5ae7e8bb4a67a436ca4f3a8eb266,Primary 3
+4,5BF407,Control,0429d69e67ae4e83909a0741a8019b87,Primary 4
+5,49AC21,Treatment,4af59b5234ea425183faf2a86a62a621,Primary 3
+6,29ABED,Control,4e4d53f8732c42a38fe836ef34ce1bed,Primary 4
+7,8C13A,Control,741245adb5a64c6b96aeab6bf0dbe53a,Primary 3
+8,8438D8,Treatment,cafe6b7bd3e84dff81f32fe2ff4f85d8,Primary 4
+9,65ED4A,Treatment,bb3bcf3f13a643889126e902ce2c6a4a,Primary 4
+10,6415D,Control,75f51d7c35db460cb8f5d83deb04aedd,Primary 3
