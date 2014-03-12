@@ -7,8 +7,9 @@
 </nav></div>
 
 
-<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css" media="screen,projection" />
-<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+<div class="container">
+<div class="row">
+<div class="col-md-12" role="main">
 
 ```{r cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
 # re-run Download.R to re-create these
@@ -37,62 +38,32 @@ learningdata <- subset(learningdata, teacher_barcode %in% t$teacher_barcode |
 
 ## Standardize barcode
 learningdata <- merge(t, learningdata, by='teacher_barcode')
-learningdata$AgeGroup <- cut(learningdata$age, 
-                             breaks=c(5, 9, 11, 14, 18), 
-                             labels=c("6-9", "10-11", "12-14", "15-17"))
-
 ```
 
-<div id="content-wrapper" class="container container-fluid"><div id="tabs">
-  <ul>
-```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
-learningdata$groupname <- sprintf("%s, %s group", learningdata$grade, learningdata$treat)
-# This section outputs the tab headers
-l_ply(sort(unique(learningdata$groupname)), function(groupname) {
-    cat(sprintf('<li><a href="#%s">%s</a></li>\n', 
-                slugify(groupname), groupname))
-})
-```
-  </ul>
-
-
-```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, out.extra="", fig.height=3, fig.width=15}
+```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, out.extra="", fig.height=5, fig.width=10, dpi=100, fig.align='center'}
+learningdata$Group <- sprintf("%s, %s group", learningdata$grade, learningdata$treat)
 require(plyr); require(reshape2); require(ggplot2); require(xtable);
-d_ply(learningdata, c("grade", "treat"), function(groupdata) {
-    groupname <- groupdata[1,'groupname']
-    grpnm <- slugify(groupname)
+
+reading_levels <- c("Nothing", "Letters", "Words", "Paragraphs", "Story")
+learningdata$literacy_level <- factor(learningdata$literacy_level, reading_levels)
+
+summaries <- dcast(learningdata, Group ~ literacy_level, length,
+      margins=c("literacy_level", "Group"), drop=F)
+percentify <- function(vec) { 
+    str_c(vec, ' (', round(100 * vec / summaries[["(all)"]]), '%)')
+}
+summaries[reading_levels] <- numcolwise(percentify)(summaries[reading_levels])
     
-    reading_levels <- c("Nothing", "Letters", "Words", "Paragraphs", "Story")
-    # put things in the right order
-    groupdata$literacy_level <- factor(groupdata$literacy_level, reading_levels)
-    age_sex_literacy <- dcast(groupdata, AgeGroup + sex ~ literacy_level, length,
-                              margins=c("age", "AgeGroup", "literacy_level"), drop=F)
-    # we use dcast(..., drop=F) and then drop 0-totaling rows, because we want all columns
-    age_sex_literacy <- subset(age_sex_literacy, `(all)` != 0)
-    percentify <- function(vec) { 
-        str_c(vec, ' (', round(100 * vec / age_sex_literacy[["(all)"]]), '%)')
-    }
-    age_sex_literacy[reading_levels] <- numcolwise(percentify)(age_sex_literacy[reading_levels])
-    
-    # Now we produce some html output per group that will print out an html table
-    # that is inside a group-wise accordion
-    cat(sprintf('<div id="%s">', grpnm))
-    print(xtable(age_sex_literacy), type='html', 
-          html.table.attributes=
-              sprintf('class="table table-bordered table-hover table-responsive 
-                      table-condensed group-table" group="%s"', grpnm),
-              include.rownames=FALSE)
-    print(ggplot(groupdata, aes(x=sex, fill=literacy_level)) + 
-        geom_bar() + facet_grid(~AgeGroup) + 
-        scale_fill_brewer(type="seq", palette="YlGnBu", drop=FALSE) + 
-        labs(y="Number of Students", 
-             title=groupname, 
-             fill="Reading Level", x=""))
-    cat('\n</div>\n')
-})
+print(xtable(summaries), type='html', 
+    html.table.attributes='class="table table-bordered table-hover table-responsive table-condensed"', 
+    include.rownames=FALSE)
+print(ggplot(data=learningdata, aes(x=literacy_level, fill=literacy_level)) + 
+          geom_histogram(data=learningdata) + facet_grid(grade~treat) +
+          scale_fill_brewer(type="seq", palette="YlGnBu", drop=FALSE) +
+          theme(legend.position="none") +
+          labs(x="Literacy Level", y="Number of Students"))
 ```
 
-</div></div>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-<script type="text/javascript"> (function($) { $( "#tabs" ).tabs(); })(jQuery); </script>
+<br/><br/><br/>
+</div></div></div>
+<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css" media="screen,projection" />
