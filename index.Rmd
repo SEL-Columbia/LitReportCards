@@ -11,7 +11,6 @@
 <div class="col-md-12" role="main">
 
 ```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, out.extra="", fig.height=5, fig.width=10, dpi=100, fig.align='center'}
-
 ## FUNCTIONS AND IMPORTS
 require(plyr); require(reshape2); require(ggplot2); require(xtable)
 learningdata <- readRDS("data/Learning_processed.RDS")
@@ -20,25 +19,28 @@ percentify <- function(vec) {
 }
 
 ## Calculate summaries
-summaries <- dcast(learningdata, Group ~ literacy_level, length,
+summaries <- dcast(learningdata, Phase + Group ~ literacy_level, length,
       margins=c("literacy_level", "Group"), drop=F)
 reading_levels <- c("Nothing", "Letters", "Words", "Paragraphs", "Story")
 summaries[reading_levels] <- numcolwise(percentify)(summaries[reading_levels])
-```
 
-```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, out.extra="", fig.height=5, fig.width=10, dpi=100, fig.align='center'}
-
-## Table print-out
-print(xtable(summaries), type='html', 
-    html.table.attributes='class="table table-bordered table-hover table-responsive table-condensed"', 
-    include.rownames=FALSE)
+## Table print-outs
+foo <- ddply(summaries, c("Phase"), function(df) {
+    cat(sprintf('<h4>%s:</h4>', df[1,'Phase']))
+    print(xtable(df), type='html', 
+          html.table.attributes='class="table table-bordered table-hover table-responsive table-condensed"', 
+          include.rownames=FALSE)    
+})
 
 ## Graph print-out
-print(ggplot(data=learningdata, aes(x=literacy_level, fill=literacy_level)) + 
-          geom_histogram(data=learningdata) + facet_grid(grade~treat) +
+d_ply(learningdata, c("Phase"), function(df) {
+    cat(sprintf('<h4>%s:</h4>', df[1,'Phase']))
+    print(ggplot(data=df, aes(x=literacy_level, fill=literacy_level)) + 
+          geom_histogram(data=df) + facet_grid(grade~treat) +
           scale_fill_brewer(type="seq", palette="YlGnBu", drop=FALSE) +
           theme(legend.position="none") +
           labs(x="Literacy Level", y="Number of Students"))
+})
 ```
 
 <br/><br/><br/>

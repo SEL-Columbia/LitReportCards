@@ -6,7 +6,7 @@ index.html: index.Rmd data/Learning_Processed.RDS
 sada.html: sada.Rmd
 	echo "require(knitr); knit2html('sada.Rmd')" | R --vanilla --no-save
 download:
-	Rscript Download.R
+	Rscript DownloadAndPreProcess.R
 clean:
 	rm cache/*
 	touch sada.Rmd

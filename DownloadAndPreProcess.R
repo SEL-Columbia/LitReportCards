@@ -27,7 +27,8 @@ learningdata$teacher_barcode <- ifelse(learningdata$teacher_barcode != "",
            t[learningdata$teacher_fallback_ID, 'teacher_barcode'])
 ## Drop unnecessary data
 learningdata <- subset(as.data.frame(learningdata), official_assessment == 'Yes',
-                       select=c("teacher_barcode", "age", "sex","literacy_level", "official_assessment"))
+                       select=c("teacher_barcode", "age", "sex","literacy_level", 
+                                "official_assessment", "X_submission_time"))
 ## Drop bad scans
 num_all_observations <- nrow(learningdata)
 learningdata <- subset(learningdata, teacher_barcode %in% t$teacher_barcode |
@@ -44,6 +45,14 @@ learningdata$literacy_level <- factor(learningdata$literacy_level, reading_level
 learningdata$Group <- sprintf("%s, %s group", learningdata$grade, learningdata$treat)
 
 ###########
-## Step 5: Save
+## Step 5: Add "phase" information
+###########
+iso8601DateTimeConvert <- function(x) { ymd_hms(str_extract(x, '^[^+Z]*(T| )[^+Z-]*')) }
+learningdata$X_submission_time <- iso8601DateTimeConvert(learningdata$X_submission_time)
+phasemap <- c("2014-03-09"="Baseline", "2014-04-06"="Midline 1")
+learningdata$Phase <- phasemap[as.character(round_date(learningdata$X_submission_time, 'week'))]
+
+###########
+## Step 6: Save
 ###########
 saveRDS(learningdata, "data/Learning_processed.RDS")
