@@ -6,57 +6,34 @@
 </ul>
 </nav></div>
 
-
 <div class="container">
 <div class="row">
 <div class="col-md-12" role="main">
 
-```{r cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
-# re-run Download.R to re-create these
-learningdata <- as.data.frame(readRDS("data/Learning.rds"))
-teachers <- as.data.frame(readRDS("data/Teachers.rds"))
-t <- read.csv("data//TeachersControl.csv", stringsAsFactors=FALSE)
-row.names(t) <- t$teacher_fallback_ID
-slugify <- function(s) { paste(unlist(str_extract_all(s, '[a-z0-9A-Z]+')), collapse="") }
-```
+```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, out.extra="", fig.height=5, fig.width=10, dpi=100, fig.align='center'}
 
-```{r cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
-stopifnot(nrow(subset(learningdata, !teacher_fallback_ID %in% t$teacher_fallback_ID &
-                          teacher_fallback_ID != "")) == 0)
+## FUNCTIONS AND IMPORTS
+require(plyr); require(reshape2); require(ggplot2); require(xtable)
+learningdata <- readRDS("data/Learning_processed.RDS")
+percentify <- function(vec) { 
+        str_c(vec, ' (', round(100 * vec / summaries[["(all)"]]), '%)')
+}
 
-#### DROP Unofficial Assessments and BAD SCANs
-learningdata$teacher_barcode <- ifelse(
-    learningdata$teacher_barcode != "", as.character(learningdata$teacher_barcode), 
-    t[learningdata$teacher_fallback_ID, 'teacher_barcode'])
-learningdata <- subset(learningdata, official_assessment == 'Yes',
-                       select=c("teacher_barcode", "age", "sex",
-                                "literacy_level", "official_assessment"))
-num_all_observations <- nrow(learningdata)
-learningdata <- subset(learningdata, teacher_barcode %in% t$teacher_barcode |
-                          teacher_barcode == "")
-# cat("DROPPING", num_all_observations - nrow(learningdata), " OBS with BAD SCANS.")
-
-## Standardize barcode
-learningdata <- merge(t, learningdata, by='teacher_barcode')
+## Calculate summaries
+summaries <- dcast(learningdata, Group ~ literacy_level, length,
+      margins=c("literacy_level", "Group"), drop=F)
+reading_levels <- c("Nothing", "Letters", "Words", "Paragraphs", "Story")
+summaries[reading_levels] <- numcolwise(percentify)(summaries[reading_levels])
 ```
 
 ```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, out.extra="", fig.height=5, fig.width=10, dpi=100, fig.align='center'}
-learningdata$Group <- sprintf("%s, %s group", learningdata$grade, learningdata$treat)
-require(plyr); require(reshape2); require(ggplot2); require(xtable);
 
-reading_levels <- c("Nothing", "Letters", "Words", "Paragraphs", "Story")
-learningdata$literacy_level <- factor(learningdata$literacy_level, reading_levels)
-
-summaries <- dcast(learningdata, Group ~ literacy_level, length,
-      margins=c("literacy_level", "Group"), drop=F)
-percentify <- function(vec) { 
-    str_c(vec, ' (', round(100 * vec / summaries[["(all)"]]), '%)')
-}
-summaries[reading_levels] <- numcolwise(percentify)(summaries[reading_levels])
-    
+## Table print-out
 print(xtable(summaries), type='html', 
     html.table.attributes='class="table table-bordered table-hover table-responsive table-condensed"', 
     include.rownames=FALSE)
+
+## Graph print-out
 print(ggplot(data=learningdata, aes(x=literacy_level, fill=literacy_level)) + 
           geom_histogram(data=learningdata) + facet_grid(grade~treat) +
           scale_fill_brewer(type="seq", palette="YlGnBu", drop=FALSE) +
