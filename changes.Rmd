@@ -1,0 +1,69 @@
+<nav class="navbar navbar-inverse navbar-fixed-bottom" role="navigation">
+  <div class="container-fluid">
+<a class="navbar-brand active" href="index.html">Literacy Report Cards</a>
+ <ul class="nav navbar-nav">
+<li><a href="about.html">About</a></li>
+</ul>
+</nav></div>
+
+<div class="container">
+<div class="row">
+<div class="col-md-12" role="main">
+
+```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, out.extra="", fig.height=5, fig.width=10, dpi=100, fig.align='center'}
+## FUNCTIONS AND IMPORTS
+require(plyr); require(reshape2); require(ggplot2); require(xtable); require(scales)
+learningdata <- readRDS("data/Learning_processed.RDS")
+
+## Two level aggregation
+# s <- ddply(learningdata, c("Phase", "treat"), function(df) {
+#     total_in_higher_group <- nrow(df)
+#     ddply(df, "literacy_level", function(df) {
+#         total = nrow(df)
+#         data.frame(
+#           #total = total,
+#           #total_outer = total_in_higher_group,
+#           proportion = total / total_in_higher_group
+#     )})
+# })
+s <- dcast(learningdata, Phase + treat ~ literacy_level, length,
+          margins=c("literacy_level"))
+proportionify <- function(vec) { round(vec / summaries[["(all)"]], digits=2) }
+s[reading_levels] <- numcolwise(proportionify)(s[reading_levels])
+
+ggplot(melt(s)[1:20,], aes(x=Phase, y=value, group=variable, fill=variable)) + 
+    facet_grid(variable~treat) + geom_bar(stat='identity') +
+    #scale_y_continuous(labels=percent) + labs(x="", y="Percent") +
+    scale_fill_manual(values=c("#ef8a62", "#ef8a62", "#f7f7f7", "#67a9cf", "#67a9cf"))
+
+
+
+
+## Calculate summaries
+summaries <- dcast(learningdata, Phase + Group ~ literacy_level, length,
+      margins=c("literacy_level", "Group"), drop=F)
+reading_levels <- c("Nothing", "Letters", "Words", "Paragraphs", "Story")
+summaries[reading_levels] <- numcolwise(percentify)(summaries[reading_levels])
+
+## Table print-outs
+foo <- ddply(summaries, c("Phase"), function(df) {
+    cat(sprintf('<h4>%s:</h4>', df[1,'Phase']))
+    print(xtable(df), type='html', 
+          html.table.attributes='class="table table-bordered table-hover table-responsive table-condensed"', 
+          include.rownames=FALSE)    
+})
+
+## Graph print-out
+d_ply(learningdata, c("Phase"), function(df) {
+    cat(sprintf('<h4>%s:</h4>', df[1,'Phase']))
+    print(ggplot(data=df, aes(x=literacy_level, fill=literacy_level)) + 
+          geom_histogram(data=df) + facet_grid(grade~treat) +
+          scale_fill_brewer(type="seq", palette="YlGnBu", drop=FALSE) +
+          theme(legend.position="none") +
+          labs(x="Literacy Level", y="Number of Students"))
+})
+```
+
+<br/><br/><br/>
+</div></div></div>
+<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css" media="screen,projection" />
