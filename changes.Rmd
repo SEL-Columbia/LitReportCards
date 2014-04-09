@@ -23,8 +23,7 @@ summaries <- ddply(learningdata, c("Phase", "Group", "grade", "treat"), function
     ddply(df, "literacy_level", function(df) {
         total = nrow(df)
         data.frame(
-          #total = total,
-          #total_outer = total_in_higher_group,
+          TotalInGroup = total,
           PercentOfGroup = total / total_in_higher_group
     )})
 })
@@ -40,16 +39,26 @@ cat('</ul>\n')
 ```
 
 ```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, out.extra="", fig.height=2, fig.width=10, dpi=100, fig.align='center'}
+## We want a separate tab per grade. Everything inside this d_ply is per-grade.
 d_ply(summaries, "grade", function(df) {
-    #cat(sprintf('<h4>%s:</h4>', df[1,'grade']))
+    ## This div says that all of the following content belongs to this tab
     cat(sprintf('<div id="%s">', str_replace(df[1,'grade'], ' ', '')))
+    
+    ## First, we show the denominator for the percents people are looking at
+    cat('<h5>Total number of Assessments:</h5>')
+    phasetotals <- ddply(df, "Phase", summarize, Total=sum(TotalInGroup))
+    cat(sprintf("%s: %s     ", phasetotals$Phase, phasetotals$Total))
+    
+    
+    ## Graphs for the grade
     d_ply(df, "literacy_level", function(df_inner) {
         literacy_level <- df_inner[1,'literacy_level']
-        ## Making a label for the literacy level to the left
-        cat('<div class="row">')
-        cat('<div class="col-md-1">')
+        
+        ## Instead of using faceting, we make an HTML h5 label for each literacy level
+        cat('<div class="row"><div class="col-md-1">')
         cat(sprintf('<h5> %s: </h5>', literacy_level))
         cat('</div>')
+        
         ## Now we output the graph to the right. Note that coloring has to be manual
         cat('<div class="col-md-8">')
         fillcolor = c("Nothing"="#d7191c", "Letters" ="#ef8a62", "Words"="#ffffbf",
@@ -60,6 +69,7 @@ d_ply(summaries, "grade", function(df) {
             theme_minimal())
         cat('</div></div>')
     })
+    ## This close-div marks the end of this grade-tab
     cat('\n</div>\n')
 })
 ```
