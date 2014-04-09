@@ -69,7 +69,14 @@ d_ply(summaries, "grade", function(df) {
             theme_minimal())
         cat('</div></div>')
     })
-    ## This close-div marks the end of this grade-tab
+    ## A little explainer, after which we can close the div for this grade-tab
+    cat(sprintf('Note: percents refer to percentage across literacy levels.
+                For example, out of all children in %s grade in the Control group
+                assessed during Baseline, only %s percent could read a Story.',
+                unique(df$grade),
+                round(100 * subset(df, treat=='Control' & Phase=='Baseline'
+                                   & literacy_level=='Story')$PercentOfGroup)
+                ))        
     cat('\n</div>\n')
 })
 ```
