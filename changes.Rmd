@@ -2,6 +2,7 @@
   <div class="container-fluid">
 <a class="navbar-brand active" href="index.html">Literacy Report Cards</a>
  <ul class="nav navbar-nav">
+<li><a href="changes.html">Change Over Time</a></li>
 <li><a href="about.html">About</a></li>
 </ul>
 </nav></div>
@@ -12,58 +13,61 @@
 
 ```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, out.extra="", fig.height=5, fig.width=10, dpi=100, fig.align='center'}
 ## FUNCTIONS AND IMPORTS
-require(plyr); require(reshape2); require(ggplot2); require(xtable); require(scales)
+require(plyr); require(reshape2); require(ggplot2); require(xtable); require(scales); require(stringr)
 learningdata <- readRDS("data/Learning_processed.RDS")
 
-## Two level aggregation
-# s <- ddply(learningdata, c("Phase", "treat"), function(df) {
-#     total_in_higher_group <- nrow(df)
-#     ddply(df, "literacy_level", function(df) {
-#         total = nrow(df)
-#         data.frame(
-#           #total = total,
-#           #total_outer = total_in_higher_group,
-#           proportion = total / total_in_higher_group
-#     )})
-# })
-s <- dcast(learningdata, Phase + treat ~ literacy_level, length,
-          margins=c("literacy_level"))
-proportionify <- function(vec) { round(vec / summaries[["(all)"]], digits=2) }
-s[reading_levels] <- numcolwise(proportionify)(s[reading_levels])
-
-ggplot(melt(s)[1:20,], aes(x=Phase, y=value, group=variable, fill=variable)) + 
-    facet_grid(variable~treat) + geom_bar(stat='identity') +
-    #scale_y_continuous(labels=percent) + labs(x="", y="Percent") +
-    scale_fill_manual(values=c("#ef8a62", "#ef8a62", "#f7f7f7", "#67a9cf", "#67a9cf"))
-
-
-
-
-## Calculate summaries
-summaries <- dcast(learningdata, Phase + Group ~ literacy_level, length,
-      margins=c("literacy_level", "Group"), drop=F)
-reading_levels <- c("Nothing", "Letters", "Words", "Paragraphs", "Story")
-summaries[reading_levels] <- numcolwise(percentify)(summaries[reading_levels])
-
-## Table print-outs
-foo <- ddply(summaries, c("Phase"), function(df) {
-    cat(sprintf('<h4>%s:</h4>', df[1,'Phase']))
-    print(xtable(df), type='html', 
-          html.table.attributes='class="table table-bordered table-hover table-responsive table-condensed"', 
-          include.rownames=FALSE)    
+## Two level aggregation; we need to figure out, for each (group, treatment, class, phase)
+## what the percent of children in a given literacy level among all levels is.
+summaries <- ddply(learningdata, c("Phase", "Group", "grade", "treat"), function(df) {
+    total_in_higher_group <- nrow(df)
+    ddply(df, "literacy_level", function(df) {
+        total = nrow(df)
+        data.frame(
+          #total = total,
+          #total_outer = total_in_higher_group,
+          PercentOfGroup = total / total_in_higher_group
+    )})
 })
+```
 
-## Graph print-out
-d_ply(learningdata, c("Phase"), function(df) {
-    cat(sprintf('<h4>%s:</h4>', df[1,'Phase']))
-    print(ggplot(data=df, aes(x=literacy_level, fill=literacy_level)) + 
-          geom_histogram(data=df) + facet_grid(grade~treat) +
-          scale_fill_brewer(type="seq", palette="YlGnBu", drop=FALSE) +
-          theme(legend.position="none") +
-          labs(x="Literacy Level", y="Number of Students"))
+```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, out.extra="", fig.height=5, fig.width=10, dpi=100, fig.align='center'}
+require(stringr)
+### Tab headers
+cat('<div id="content-wrapper" class="container container-fluid"><div id="tabs">\n<ul>\n')
+grades <- unique(learningdata$grade)
+cat(sprintf('<li><a href="#%s">%s</a></li>\n', str_replace(grades, ' ', ''), grades))
+cat('</ul>\n')
+```
+
+```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, out.extra="", fig.height=2, fig.width=10, dpi=100, fig.align='center'}
+d_ply(summaries, "grade", function(df) {
+    #cat(sprintf('<h4>%s:</h4>', df[1,'grade']))
+    cat(sprintf('<div id="%s">', str_replace(df[1,'grade'], ' ', '')))
+    d_ply(df, "literacy_level", function(df_inner) {
+        literacy_level <- df_inner[1,'literacy_level']
+        ## Making a label for the literacy level to the left
+        cat('<div class="row">')
+        cat('<div class="col-md-1">')
+        cat(sprintf('<h5> %s: </h5>', literacy_level))
+        cat('</div>')
+        ## Now we output the graph to the right. Note that coloring has to be manual
+        cat('<div class="col-md-8">')
+        fillcolor = c("Nothing"="#d7191c", "Letters" ="#ef8a62", "Words"="#ffffbf",
+                      "Paragraphs"="#abd9e9", "Story"="#2c7bb6")[literacy_level]
+        print(ggplot(data=df_inner, aes(x=Phase, y=PercentOfGroup)) + 
+            geom_bar(stat='identity', fill=fillcolor) + facet_grid(~ treat) + 
+            scale_y_continuous(labels=percent) + labs(x="", y="Percent") +
+            theme_minimal())
+        cat('</div></div>')
+    })
+    cat('\n</div>\n')
 })
 ```
 
 <br/><br/><br/>
 </div></div></div>
 <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css" media="screen,projection" />
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+<script type="text/javascript"> (function($) { $( "#tabs" ).tabs(); })(jQuery); </script>
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
