@@ -13,27 +13,29 @@
 
 ```{r results='asis', cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, out.extra="", fig.height=5, fig.width=10, dpi=100, fig.align='center'}
 ## FUNCTIONS AND IMPORTS
-require(plyr); require(reshape2); require(ggplot2); require(xtable)
+require(plyr); require(reshape2); require(ggplot2); require(xtable); require(stringr)
 learningdata <- readRDS("data/Learning_processed.RDS")
+## Quick function to take a dcast-ed table, and calculated percentages out of the (all) column
 percentify <- function(vec) { 
         str_c(vec, ' (', round(100 * vec / summaries[["(all)"]]), '%)')
 }
 
-## Calculate summaries
+## Calculate summaries. 
+## For the reading level columns (ie, our numbers), we will percentify our values.
 summaries <- dcast(learningdata, Phase + Group ~ literacy_level, length,
       margins=c("literacy_level", "Group"), drop=F)
 reading_levels <- c("Nothing", "Letters", "Words", "Paragraphs", "Story")
 summaries[reading_levels] <- numcolwise(percentify)(summaries[reading_levels])
 
-## Table print-outs
-foo <- ddply(summaries, c("Phase"), function(df) {
+## Table print-outs. First print out the "Phase" as a header element, then the table.
+d_ply(summaries, c("Phase"), function(df) {
     cat(sprintf('<h4>%s:</h4>', df[1,'Phase']))
     print(xtable(df), type='html', 
           html.table.attributes='class="table table-bordered table-hover table-responsive table-condensed"', 
           include.rownames=FALSE)    
 })
 
-## Graph print-out
+## Graph print-outs. First print out the "Phase" as a header element, then the graphs.
 d_ply(learningdata, c("Phase"), function(df) {
     cat(sprintf('<h4>%s:</h4>', df[1,'Phase']))
     print(ggplot(data=df, aes(x=literacy_level, fill=literacy_level)) + 
