@@ -56,11 +56,19 @@ foo <- ddply(summaries, c("Phase"), function(df) {
 ## Graph print-out
 d_ply(learningdata, c("Phase"), function(df) {
     cat(sprintf('<h4>%s:</h4>', df[1,'Phase']))
-    print(ggplot(data=df, aes(x=literacy_level, fill=literacy_level)) + 
-          geom_histogram(data=df) + facet_grid(grade~treat) +
-          scale_fill_brewer(type="seq", palette="YlGnBu", drop=FALSE) +
-          theme(legend.position="none") +
-          labs(x="Literacy Level", y="Number of Students"))
+    print(
+        ggplot(data=df, aes(x=literacy_level, fill=literacy_level)) + 
+            facet_grid(grade~treat) +
+            geom_bar(aes(y=(..count..)/ sapply(PANEL, FUN=function(x) sum(count[PANEL == x])))) + 
+            scale_fill_brewer(type="seq", palette="YlGnBu", drop=FALSE) +
+            scale_y_continuous(label=percent) +
+            theme(legend.position="none") +
+            labs(x="Literacy Level", y="Number of Students")
+        ## NOTE: In this version of the graph, we use the PANEL variable, which is
+        ## an undocumented internal variable from ggplot, that is NOT recommended for use
+        ## but makes code considerably shorter. This may break in the future.
+        ## See http://stackoverflow.com/questions/20600900/r-faceted-bar-chart-with-percentages-labels-independent-for-each-plot for further discussion.
+    )
 })
 ```
 
