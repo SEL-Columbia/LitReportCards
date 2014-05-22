@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 index.md
+changes.md
 *.Rproj
 data/
 cache/

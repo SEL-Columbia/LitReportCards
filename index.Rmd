@@ -2,6 +2,7 @@
   <div class="container-fluid">
 <a class="navbar-brand active" href="index.html">Literacy Report Cards</a>
  <ul class="nav navbar-nav">
+<li><a href="changes.html">Change Over Time</a></li>
 <li><a href="about.html">About</a></li>
 </ul>
 </nav></div>
@@ -39,7 +40,8 @@ d_ply(learningdata, c("Phase"), function(df) {
     cat(sprintf('<h4>%s:</h4>', df[1,'Phase']))
     print(ggplot(data=df, aes(x=literacy_level, fill=literacy_level)) + 
           geom_histogram(data=df) + facet_grid(grade~treat) +
-          scale_fill_brewer(type="seq", palette="YlGnBu", drop=FALSE) +
+          scale_fill_manual(values=c("Nothing"="#d7191c", "Letters" ="#ef8a62", "Words"="#ffffbf",
+                      "Paragraphs"="#abd9e9", "Story"="#2c7bb6"), drop=FALSE) +
           theme(legend.position="none") +
           labs(x="Literacy Level", y="Number of Students"))
 })

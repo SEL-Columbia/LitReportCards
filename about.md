@@ -2,6 +2,7 @@
   <div class="container-fluid">
 <a class="navbar-brand active" href="index.html">Literacy Report Cards</a>
  <ul class="nav navbar-nav">
+ <li><a href="changes.html">Change Over Time</a></li>
 <li class="active"><a href="about.html">About</a></li>
 </ul></nav></div>
 <div class="container">

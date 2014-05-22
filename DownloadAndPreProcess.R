@@ -49,8 +49,9 @@ learningdata$Group <- sprintf("%s, %s group", learningdata$grade, learningdata$t
 ###########
 iso8601DateTimeConvert <- function(x) { ymd_hms(str_extract(x, '^[^+Z]*(T| )[^+Z-]*')) }
 learningdata$X_submission_time <- iso8601DateTimeConvert(learningdata$X_submission_time)
-phasemap <- c("2014-03-09"="Baseline", "2014-04-06"="Midline 1")
+phasemap <- c("2014-03-09"="Baseline", "2014-04-06"="Midline 1", "2014-04-13"="Midline 1")
 learningdata$Phase <- phasemap[as.character(round_date(learningdata$X_submission_time, 'week'))]
+stopifnot(all(!is.na(learningdata$Phase))) # Phase_Map is incomplete
 
 ###########
 ## Step 6: Save
